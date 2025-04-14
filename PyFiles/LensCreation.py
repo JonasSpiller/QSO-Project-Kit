@@ -7,6 +7,8 @@ from astropy.io import fits
 import h5py
 import random
 
+# Combine QSO + LAE (ELG) to lenses
+
 np.random.seed(123)  # Set seed for NumPy's random generator
 random.seed(123)     # Set seed for Python's random module
 
@@ -21,9 +23,9 @@ def extract_data_from_hdf5(file_path):
     return classifier, [n.decode() for n in name], spectra, redshift
 
 # Function to process and modify QSO fluxes
-def process_qso_fluxes(fits_directory, pkl_directory, output_directory, lens_percentage=1.0, num_files=None):
+def process_qso_fluxes(fits_directory, pkl_directory, pkl_names, output_directory, lens_percentage=1.0, num_files=None):
     # List all pickle files in the directory
-    pkl_files = [os.path.join(pkl_directory, f) for f in os.listdir(pkl_directory) if f.endswith(".pkl")]
+    pkl_files = [os.path.join(pkl_directory, f) for f in pkl_names]
 
     # Store LAE data
     all_LAE = pd.concat([pd.read_pickle(f) for f in pkl_files], ignore_index=True)
@@ -81,7 +83,7 @@ def process_qso_fluxes(fits_directory, pkl_directory, output_directory, lens_per
 
     # Handling 100% lensing when lens_percentage is 1.0
     if lens_percentage == 1.0:
-        valid_qso_indices = np.where(all_redshifts_qso <= 1.68)[0]
+        valid_qso_indices = np.where(all_redshifts_qso <= 3.0)[0]
     else:
         # Randomly sample a percentage of the QSOs, regardless of redshift
         num_modify = int(lens_percentage * num_qsos)
@@ -154,4 +156,6 @@ fits_directory = os.path.expandvars('$SCRATCH/MainQSO/')
 pkl_directory = 'fastspec_LAE1'
 output_directory = 'MainQSO/Redshift/'
 
-process_qso_fluxes(fits_directory, pkl_directory, output_directory, lens_percentage=1.0, num_files=None)
+pkl_names = ["augLAE_SPHINX.pkl", "augLAE_ZoomSim.pkl"]
+
+process_qso_fluxes(fits_directory, pkl_directory, pkl_names, output_directory, lens_percentage=1.0, num_files=None)
