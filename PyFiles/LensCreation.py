@@ -27,14 +27,15 @@ def extract_data_from_hdf5(file_path):
 # Function to process and modify QSO fluxes
 def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_percentage=.1, num_files=None):
     # List all HDF5 files in the directory and sort them by name
-    hdf5_files = sorted([f for f in os.listdir(hdf5_directory) if f.endswith(".h5")][:2])
+    hdf5_files = sorted([f for f in os.listdir(hdf5_directory) if f.endswith(".h5")])
 
     # Initialize arrays to store data
-    all_classifierLAE, all_namesLAE, all_redshiftsLAE, all_intfluxLAE, all_spectraLAE = [], [], [], []
+    all_classifierLAE, all_namesLAE, all_redshiftsLAE, all_intfluxLAE, all_spectraLAE = [], [], [], [], []
 
     # Iterate over HDF5 files in the directory
     for filename in hdf5_files:
         file_path = os.path.join(hdf5_directory, filename)
+        print(f"add LAE spectra {filename}")
 
         # Extract data from the HDF5 file without filtering
         classifier, name, redshift, intflux, spectra = extract_data_from_hdf5(file_path)
@@ -46,8 +47,9 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
         all_intfluxLAE.extend(intflux)
         all_spectraLAE.extend(spectra)
 
-    print(f"Total LAE entries: {len(all_redshiftsLAE)}")
+    all_classifierLAE, all_namesLAE, all_redshiftsLAE, all_intfluxLAE, all_spectraLAE = np.array(all_classifierLAE), np.array(all_namesLAE), np.array(all_redshiftsLAE), np.array(all_intfluxLAE), np.array(all_spectraLAE)
 
+    print(f"Total LAE entries: {len(all_redshiftsLAE)}")
 
     # List all QSO FITS files in the directory
     fits_files = sorted([f for f in os.listdir(fits_directory) if f.endswith(".fits")])
@@ -117,12 +119,13 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
     modified_indices = []
 
     print(np.max(valid_qso_indices))
+    print(len(valid_qso_indices))
 
     # Superimpose LAE fluxes onto QSO fluxes based on the redshift condition
     for i in valid_qso_indices:
-        if i >= len(all_redshiftsLAE):
-            print(f"QSO index {i} exceeds LAE redshift data size, skipping.")
-            continue
+        #if i >= len(all_redshiftsLAE):
+        #    print(f"QSO index {i} exceeds LAE redshift data size, skipping.")
+        #    continue
 
         elg_candidates = np.where(all_redshiftsLAE > all_redshifts_qso[i])[0]
         if elg_candidates.size > 0:
@@ -135,7 +138,7 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
                 if adjusted_factor >= 2 and adjusted_factor <= 4:
                     break
 
-            all_qso_fluxes[i] += elg_flux * adjusted_factor
+            all_qso_fluxes[i] += elg_flux * adjusted_factor *100
             labels[i] = 1  # Set the label to 1 to indicate modification
             LAE_redshifts_for_qsos[i] = all_redshiftsLAE[elg_idx]
             LAE_names_for_qsos[i] = all_namesLAE[elg_idx]
@@ -158,8 +161,8 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
         # Create a BinaryTableHDU for the modified fluxes
         col1 = fits.Column(name='TARGETID', format='K', array=all_targetids_qso[start_idx:end_idx])
         col2 = fits.Column(name='Z', format='D', array=all_redshifts_qso[start_idx:end_idx])
-        col3 = fits.Column(name='FLUX', format='PD()', array=all_qso_fluxes[start_idx:end_idx])
-        col4 = fits.Column(name='ivar', format='PD()', array=all_ivar[start_idx:end_idx])
+        col3 = fits.Column(name='FLUX', format='QD()', array=all_qso_fluxes[start_idx:end_idx])
+        col4 = fits.Column(name='ivar', format='QD()', array=all_ivar[start_idx:end_idx])
         col5 = fits.Column(name='LABEL', format='I', array=labels[start_idx:end_idx])  # Add labels column
         col6 = fits.Column(name='ELG_Z', format='D',
                            array=LAE_redshifts_for_qsos[start_idx:end_idx])  # Add ELG redshift column
@@ -171,7 +174,7 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
         hdu_list.append(hdu)
 
         # Write to a new FITS file
-        output_file_path = os.path.join(output_directory, f"modified_test_set_Phase2_{fits_file}")
+        output_file_path = os.path.join(output_directory, f"modified_minsignal1_{fits_file}")
         hdu_list.writeto(output_file_path, overwrite=True)
 
         start_idx = end_idx
@@ -186,9 +189,9 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
 
 
 # Example usage
-fits_directory = os.path.expandvars('$SCRATCH/MainQSO')
+fits_directory = os.path.expandvars('$SCRATCH/MainQSO/B')
 hdf5_directory = os.path.expandvars('$SCRATCH/augLAE_minsignal1_hdf5')
-output_directory = os.path.expandvars('$SCRATCH/modifiedMainQSO')
+output_directory = os.path.expandvars('$SCRATCH/modifiedMainQSO_minsignal1/B')
 # I directly indicate what percentage of the files I want to be lensed and select the number of files
 # i want to use from the MainQSO directory (whereever the QSO files are located
-process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_percentage=.1, num_files=2)
+process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_percentage=.1, num_files=None)
