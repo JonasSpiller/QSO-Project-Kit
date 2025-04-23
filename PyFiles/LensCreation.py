@@ -104,6 +104,7 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
     num_qsos = len(all_qso_fluxes)
     labels = np.zeros(num_qsos, dtype=int)
     LAE_redshifts_for_qsos = np.zeros(num_qsos)
+    LAE_intflux_for_qsos = np.zeros(num_qsos)
     LAE_names_for_qsos = np.array([""] * num_qsos, dtype=object)
 
     # Handling 100% lensing when lens_percentage is 1.0
@@ -138,9 +139,10 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
                 if adjusted_factor >= 2 and adjusted_factor <= 4:
                     break
 
-            all_qso_fluxes[i] += elg_flux * adjusted_factor *100
+            all_qso_fluxes[i] += elg_flux * adjusted_factor
             labels[i] = 1  # Set the label to 1 to indicate modification
             LAE_redshifts_for_qsos[i] = all_redshiftsLAE[elg_idx]
+            LAE_intflux_for_qsos[i] = all_intfluxLAE[elg_idx]
             LAE_names_for_qsos[i] = all_namesLAE[elg_idx]
             modified_indices.append(i)
 
@@ -164,11 +166,10 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
         col3 = fits.Column(name='FLUX', format='QD()', array=all_qso_fluxes[start_idx:end_idx])
         col4 = fits.Column(name='ivar', format='QD()', array=all_ivar[start_idx:end_idx])
         col5 = fits.Column(name='LABEL', format='I', array=labels[start_idx:end_idx])  # Add labels column
-        col6 = fits.Column(name='ELG_Z', format='D',
-                           array=LAE_redshifts_for_qsos[start_idx:end_idx])  # Add ELG redshift column
-        col7 = fits.Column(name='ELG_NAME', format='A20',
-                           array=LAE_names_for_qsos[start_idx:end_idx])  # Add ELG name column
-        cols = fits.ColDefs([col1, col2, col3, col4, col5, col6, col7])
+        col6 = fits.Column(name='ELG_Z', format='D', array=LAE_redshifts_for_qsos[start_idx:end_idx])  # Add ELG redshift column
+        col7 = fits.Column(name='ELG_NAME', format='A40', array=LAE_names_for_qsos[start_idx:end_idx])  # Add ELG name column
+        col8 = fits.Column(name='LAE_intflux', format='D', array=LAE_intflux_for_qsos[start_idx:end_idx])  # Add LAE intflux
+        cols = fits.ColDefs([col1, col2, col3, col4, col5, col6, col7, col8])
         hdu = fits.BinTableHDU.from_columns(cols)
 
         hdu_list.append(hdu)
@@ -189,9 +190,17 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
 
 
 # Example usage
-fits_directory = os.path.expandvars('$SCRATCH/MainQSO/B')
-hdf5_directory = os.path.expandvars('$SCRATCH/augLAE_minsignal1_hdf5')
-output_directory = os.path.expandvars('$SCRATCH/modifiedMainQSO_minsignal1/B')
+fits_directoryA = os.path.expandvars('$SCRATCH/MainQSO/A')
+hdf5_directoryA = os.path.expandvars('$SCRATCH/augLAE_minsignal1_hdf5')
+output_directoryA = os.path.expandvars('$SCRATCH/modifiedMainQSO_minsignal1/A')
 # I directly indicate what percentage of the files I want to be lensed and select the number of files
 # i want to use from the MainQSO directory (whereever the QSO files are located
-process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_percentage=.1, num_files=None)
+process_qso_fluxes(fits_directoryA, hdf5_directoryA, output_directoryA, lens_percentage=.1, num_files=None)
+
+# Example usage
+fits_directoryB = os.path.expandvars('$SCRATCH/MainQSO/B')
+hdf5_directoryB = os.path.expandvars('$SCRATCH/augLAE_minsignal1_hdf5')
+output_directoryB = os.path.expandvars('$SCRATCH/modifiedMainQSO_minsignal1/B')
+# I directly indicate what percentage of the files I want to be lensed and select the number of files
+# i want to use from the MainQSO directory (whereever the QSO files are located
+process_qso_fluxes(fits_directoryB, hdf5_directoryB, output_directoryB, lens_percentage=.1, num_files=None)
