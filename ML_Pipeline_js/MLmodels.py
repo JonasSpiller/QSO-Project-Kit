@@ -1,33 +1,26 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 14 03:10:34 2021
-
-Models for Machine learning , cross validation 
-
-@author: emily
-"""
-
 ## LIBRARIES
 import numpy as np
 import gc
 
 ## ML 
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout, Conv1D, AveragePooling1D, MaxPooling1D, Flatten, LeakyReLU
-from keras.optimizers import SGD, Adam
+import tensorflow as tf
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Activation, Dropout, Conv1D, AveragePooling1D, MaxPooling1D, Flatten, LeakyReLU
+from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.optimizers.schedules import ExponentialDecay
 from utility_functions import ks, bs, nf
-from tensorflow.keras.models import Model
 
 
 # CNN1t_1ConvA
-def CNN_model1(hyperparameters, x_train, y_train, x_valid_test, y_valid_test):
-
+def CNN_model1(hyperparameters, x_train, y_train, x_valid_test, y_valid_test, strategy):
+    
     # =============================================================================
     # # Change this part for every new CNN
     # =============================================================================
 
-    batch_size, epochs, learning_rate, momentum, kernelsize, maxpooling = hyperparameters
+    #batch_size, epochs, learning_rate, momentum, kernelsize, maxpooling = hyperparameters
+    batch_size, epochs = hyperparameters
+    learning_rate, momentum, kernelsize, maxpooling = 0.01, 0.5, 6, 3
 
     # =============================================================================
     # =============================================================================
@@ -38,36 +31,52 @@ def CNN_model1(hyperparameters, x_train, y_train, x_valid_test, y_valid_test):
     kernelsize = ks(kernelsize)
 
     verbose = 1
-    decay_rate = learning_rate / epochs
+    #decay_rate = learning_rate / epochs
 
     # x_train.shape = (nQSOs, wv_bins=7781, channels=1)
-    # y_train.shape = (nQSOs, LAEclassification=2)
-    n_bins, n_features, n_outputs = x_train.shape[1], x_train.shape[2], y_train.shape[1]
+    # y_train.shape = (nQSOs, LAEclassification=1)
+    n_bins, n_features = x_train.shape[1], x_train.shape[2]
 
-    # =============================================================================
-    # # Change this part for every new CNN
-    # =============================================================================
+    with strategy.scope():
+        # =============================================================================
+        # # Change this part for every new CNN
+        # =============================================================================
+        
+        model_CNN1 = Sequential()
+        model_CNN1.add(Conv1D(filters=batch_size, kernel_size=kernelsize, input_shape=(n_bins, n_features)))
+        model_CNN1.add(MaxPooling1D(pool_size=round(maxpooling)))
+        model_CNN1.add(Flatten())
+        model_CNN1.add(Dense(1, activation='sigmoid'))
+    
+        # =============================================================================
+        # =============================================================================
+    
+        lr_schedule = ExponentialDecay(
+            initial_learning_rate=learning_rate,
+            decay_steps=1000,
+            decay_rate=0.96,  # here decay_rate becomes a factor (e.g., 0.96)
+            staircase=True)
+    
+        #sgd = SGD(learning_rate=lr_schedule, momentum=momentum, nesterov=True)
+        adam = Adam(learning_rate=lr_schedule)
+        #model_CNN1.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
-    model_CNN1 = Sequential()
-    model_CNN1.add(Conv1D(filters=batch_size, kernel_size=kernelsize, input_shape=(n_bins, n_features)))
-    model_CNN1.add(MaxPooling1D(pool_size=round(maxpooling)))
-    model_CNN1.add(Flatten())
-    model_CNN1.add(Dense(n_outputs, activation='sigmoid'))
+        model_CNN1.compile(
+            optimizer=adam,
+            loss='binary_crossentropy',
+            metrics=[
+                tf.keras.metrics.Precision(name='precision'),
+                tf.keras.metrics.Recall(name='recall'),
+                tf.keras.metrics.AUC(name='pr_auc', curve='PR')  # Precision-Recall AUC
+            ]
+        )
 
-    # =============================================================================
-    # =============================================================================
-
-    sgd = SGD(learning_rate=learning_rate, momentum=momentum, decay=decay_rate, nesterov=True)
-    #adam = Adam(learning_rate=lr)
-    model_CNN1.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
-
-    model_CNN1.summary()
-    print("batch: " + str(batch_size) + " epochs: " + str(epochs) + " LR: " + str(learning_rate) + " momentum: " + str(
-        momentum) + " kernel: " + str(kernelsize) + " maxpool: " + str(maxpooling))
-
-    # fit network
-    model_CNN1.fit(x_train, y_train, validation_data=(x_valid_test, y_valid_test), epochs=epochs, batch_size=batch_size,
-                   verbose=verbose)
+        model_CNN1.summary()
+        print("batch: " + str(batch_size) + " epochs: " + str(epochs) + " LR: " + str(learning_rate) + " momentum: " + str(
+            momentum) + " kernel: " + str(kernelsize) + " maxpool: " + str(maxpooling))
+    
+        # fit network
+        model_CNN1.fit(x_train, y_train, validation_data=(x_valid_test, y_valid_test), epochs=epochs, batch_size=batch_size, verbose=verbose)
 
     # results
     prediction_probsCNN1 = model_CNN1.predict(x_valid_test, batch_size=batch_size, verbose=1)

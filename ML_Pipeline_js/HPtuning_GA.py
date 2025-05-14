@@ -77,14 +77,14 @@ def mutation(bitstring, r_mut):
 
 
 # genetic algorithm as maximizer
-def genetic_algorithm(objective, bounds, n_bits, n_iter, n_pop, r_cross, r_mut, X_train, y_train, X_valid, y_valid):
+def genetic_algorithm(objective, bounds, n_bits, n_iter, n_pop, r_cross, r_mut, X_train, y_train, X_valid, y_valid, strategy):
     
 	start = time.time()
     
 	# initial population of random bitstring
 	pop = [randint(0, 2, n_bits*len(bounds)).tolist() for _ in range(n_pop)]
 	# keep track of best solution
-	best, accuracy_scores = pop[0], itemgetter('accuracy_valid_test', 'accuracy_train')(objective(decode(bounds, n_bits, pop[0]), X_train, y_train, X_valid, y_valid))#['accuracy_valid_test']
+	best, accuracy_scores = pop[0], itemgetter('accuracy_valid_test', 'accuracy_train')(objective(decode(bounds, n_bits, pop[0]), X_train, y_train, X_valid, y_valid, strategy))#['accuracy_valid_test']
 	# enumerate generations
 	best_eval = accuracy_scores[0]
 	temp_acc_train = accuracy_scores[1]
@@ -100,7 +100,7 @@ def genetic_algorithm(objective, bounds, n_bits, n_iter, n_pop, r_cross, r_mut, 
 		decoded = [decode(bounds, n_bits, p) for p in pop]
 		# evaluate all candidates in the population
         
-		accuracies_scores = [itemgetter('accuracy_valid_test', 'accuracy_train')(objective(d, X_train, y_train, X_valid, y_valid)) for d in decoded] # objective(d, X_train, y_train, X_valid, y_valid)['accuracy_valid_test']
+		accuracies_scores = [itemgetter('accuracy_valid_test', 'accuracy_train')(objective(d, X_train, y_train, X_valid, y_valid, strategy)) for d in decoded] # objective(d, X_train, y_train, X_valid, y_valid)['accuracy_valid_test']
 		#or
 		#it = 0
 		#accuracies_scores=[]

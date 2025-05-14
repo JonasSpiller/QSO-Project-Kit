@@ -1,78 +1,44 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jan 3 14:20:58 2021
-
-@author: emily
-
-This code applies cross-validation
-"""
 ## LIBRARIES
 import pandas as pd
 import numpy as np
 import os
+os.environ["NCCL_DEBUG"] = "INFO"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
 import pickle
 import time
 import gc
 import sys
-from keras.utils.np_utils import to_categorical
+import tensorflow as tf
+from tensorflow.keras.utils import to_categorical
 from utility_functions import extract_data_from_fits
 from utility_functions import train_CNN_js
 from MLmodels import CNN_model1
 from sklearn.model_selection import train_test_split
 import datetime
 import pytz
-import tensorflow as tf
 
 np.random.seed(100)
+
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+print("GPU Devices: ", tf.config.list_physical_devices('GPU'))
+
+strategy = tf.distribute.MirroredStrategy()
+print('Number of devices: {}'.format(strategy.num_replicas_in_sync))
 
 # For saving the progress to txt file
 zurich_timezone = pytz.timezone('Europe/Zurich')
 
 start_global = time.time()
 
-#
-# # Set GPU, CV fold number and version
-# if len(sys.argv)<3:
-#     raise Exception("gpu and test-fold (j) not specified.")
-#
-# gpu=int(sys.argv[1])
-# j=int(sys.argv[2]) # test-fold
-#
-# if len(sys.argv)<4:
-#     version = 6
-# elif len(sys.argv)==4:
-#     version=sys.argv[3]
-#
-# # gpu=3
-# # j=3
-# # version=6
-#
-# print("gpu:"+str(gpu))
-# print("fold:"+str(j))
-# print("version:"+str(version))
-#
-# ## ENVIRONMENT VARIABLES
-#
-# os.environ['TF_NUM_INTEROP_THREADS'] = "32"
-# os.environ['TF_NUM_INTRAOP_THREADS'] = "32"
-# os.environ['OMP_NUM_THREADS'] = "32"
-# os.environ['OPENBLAS_NUM_THREADS'] = "32"
-# os.environ['MKL_NUM_THREADS'] = "32"
-# os.environ['VECLIB_MAXIMUM_THREADS'] = "32"
-# os.environ['NUMEXPR_NUM_THREADS'] = "32"
-# os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
-# os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
-# ## SET SEED
 
-
-data_path = os.path.expandvars('$SCRATCH/DATA/modifiedMainQSO/modifiedMainQSO_minsignal1/A/')
-results_path = os.path.expandvars('$SCRATCH/RESULTS/modifiedMainQSO_minsignal1/A/')
+data_path = os.path.expandvars('$SCRATCH/DATA/modifiedMainQSO/modifiedMainQSO_minsignal1_amplified100/A/')
+results_path = os.path.expandvars('$SCRATCH/RESULTS/modifiedMainQSO_minsignal1_amplified100/A/')
 os.makedirs(results_path, exist_ok=True)
 
 flux_list = []
 labels_list = []
 
-fits_files = [os.path.join(data_path, file) for file in os.listdir(data_path) if file.endswith('.fits')]
+fits_files = [os.path.join(data_path, file) for file in os.listdir(data_path)[:1] if file.endswith('.fits')]
 
 for fits_file in fits_files:
     print(f"Processing file: {fits_file}")
@@ -102,12 +68,6 @@ x_train = np.expand_dims(x_train, axis=-1)
 x_valid = np.expand_dims(x_valid, axis=-1)
 x_test = np.expand_dims(x_test, axis=-1)
 
-# One-Hot Encoding
-y_train = to_categorical(y_train)
-y_valid = to_categorical(y_valid)
-y_test = to_categorical(y_test)
-
-
 del all_flux, all_labels
 gc.collect()
 
@@ -118,7 +78,8 @@ gc.collect()
 # =============================================================================
 
 model = CNN_model1
-bounds = [[16, 64], [100, 200], [0.0001, 0.01], [0.1, 0.9], [2, 8], [2, 3]]
+#bounds = [[16, 64], [100, 200], [0.0001, 0.01], [0.1, 0.9], [2, 8], [2, 3]]
+bounds = [[16, 256], [10, 50]]
 
 
 # =============================================================================
@@ -132,7 +93,7 @@ print("Starting")
 # with open(results_path + 'export_CV/progress_fold{}_v{}.txt'.format(j,version), 'a') as file:
 #     file.write(datetime.datetime.now(zurich_timezone).strftime("%Y-%m-%d %H:%M:%S")+" - " + method + " starting.\n")
 
-res_opt_method, CM_opt, hyperparam_optim, optim_results = train_CNN_js(model, bounds, x_train, y_train, x_valid, y_valid, x_test, y_test)
+res_opt_method, CM_opt, hyperparam_optim, optim_results = train_CNN_js(model, bounds, x_train, y_train, x_valid, y_valid, x_test, y_test, strategy)
 
 print("Completed")
 # with open(results_path + 'export_CV/progress_fold{}_v{}.txt'.format(j,version), 'a') as file:
@@ -150,12 +111,12 @@ print("Completed")
 # use a dictionary with keys using the right names.
 results = {'results': res_opt_method, 'confusion matrix': CM_opt, 'hyperparameters': hyperparam_optim,
            'y_test': list(y_test)}
-a_file = open(results_path + "results.pkl", "wb")
+a_file = open(results_path + "results1.pkl", "wb")
 pickle.dump(results, a_file)
 a_file.close()
 
 # export optimization results
-a_file = open(results_path + "GA_results.pkl", "wb")
+a_file = open(results_path + "GA_results1.pkl", "wb")
 pickle.dump(optim_results, a_file)
 a_file.close()
 

@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 13 09:49:10 2021
-
-@author: emily
-"""
-
-## LIBRARIES
 import numpy as np
 import time
 from sklearn.metrics import confusion_matrix
@@ -32,14 +24,14 @@ def FDRthreshold_js(Y_test, prob, fdr=0.05, iterations=1000):
 
 
 # Optimize hyperparameters and Train the model
-def train_CNN_js(CNN_model, bounds_CNN, x_train, y_train, x_valid, y_valid, x_test, y_test):
+def train_CNN_js(CNN_model, bounds_CNN, x_train, y_train, x_valid, y_valid, x_test, y_test, strategy):
     # set up optimizer:
     # define the total iterations
-    n_iter = 10  # 20
+    n_iter = 5 #10  # 20
     # bits per variable
     n_bits = 16
-    # define the population size
-    n_pop = 8  # 10
+    # define the population size (always even!!)
+    n_pop = 6 #8  # 10 
     # crossover rate
     r_cross = 0.9
 
@@ -51,17 +43,17 @@ def train_CNN_js(CNN_model, bounds_CNN, x_train, y_train, x_valid, y_valid, x_te
     r_mut_CNN = 1.0 / (float(n_bits) * len(bounds_CNN))
     # perform the genetic algorithm search
     best_CNN, score_CNN, best_accuracies_valid_CNN, best_accuracies_train_CNN, track_generation_CNN, track_hyperparams_CNN = genetic_algorithm(
-        CNN_model, bounds_CNN, n_bits, n_iter, n_pop, r_cross, r_mut_CNN, x_train, y_train, x_valid, y_valid)
+        CNN_model, bounds_CNN, n_bits, n_iter, n_pop, r_cross, r_mut_CNN, x_train, y_train, x_valid, y_valid, strategy)
     decoded_CNN = decode(bounds_CNN, n_bits, best_CNN)
     # end time
     end_o_CNN = time.time()
 
     # test model:
     start_m_CNN = time.time()
-    res_opt_method = CNN_model(decoded_CNN, x_train, y_train, x_test, y_test)
+    res_opt_method = CNN_model(decoded_CNN, x_train, y_train, x_test, y_test, strategy)
     end_m_CNN_js1 = time.time()
 
-    CM_opt = np.array((confusion_matrix(y_test[:, 1], res_opt_method['Y_pred']).ravel()))
+    CM_opt = np.array((confusion_matrix(y_test, res_opt_method['Y_pred']).ravel()))
     hyperparam_optim = decoded_CNN
 
     # optimization results
@@ -107,6 +99,7 @@ def extract_center(data, percentage):
 
 
 def extract_data_from_fits(file_path):
+    print(f"Processing file: {file_path}")
     with fitsio.FITS(file_path) as hdul:
         target_ids = hdul[1]['TARGETID'][:]
         redshifts = hdul[1]['ELG_Z'][:]
