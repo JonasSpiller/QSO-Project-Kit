@@ -124,9 +124,6 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
 
     # Superimpose LAE fluxes onto QSO fluxes based on the redshift condition
     for i in valid_qso_indices:
-        #if i >= len(all_redshiftsLAE):
-        #    print(f"QSO index {i} exceeds LAE redshift data size, skipping.")
-        #    continue
 
         elg_candidates = np.where(all_redshiftsLAE > all_redshifts_qso[i])[0]
         if elg_candidates.size > 0:
@@ -139,7 +136,7 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
                 if adjusted_factor >= 2 and adjusted_factor <= 4:
                     break
 
-            all_qso_fluxes[i] += elg_flux * adjusted_factor
+            all_qso_fluxes[i] += elg_flux * adjusted_factor *5
             labels[i] = 1  # Set the label to 1 to indicate modification
             LAE_redshifts_for_qsos[i] = all_redshiftsLAE[elg_idx]
             LAE_intflux_for_qsos[i] = all_intfluxLAE[elg_idx]
@@ -190,17 +187,17 @@ def process_qso_fluxes(fits_directory, hdf5_directory, output_directory, lens_pe
 
 
 # Example usage
-fits_directoryA = os.path.expandvars('$SCRATCH/MainQSO/A')
-hdf5_directoryA = os.path.expandvars('$SCRATCH/augLAE_minsignal1_hdf5')
-output_directoryA = os.path.expandvars('$SCRATCH/modifiedMainQSO_minsignal1/A')
+fits_directoryA = os.path.expandvars('$SCRATCH/DATA/MainQSO/A')
+hdf5_directoryA = os.path.expandvars('$SCRATCH/DATA/LAE/augLAE_minsignal2_hdf5')
+output_directoryA = os.path.expandvars('$SCRATCH/DATA/modifiedMainQSO/modifiedMainQSO_minsignal2_amplified5/A')
 # I directly indicate what percentage of the files I want to be lensed and select the number of files
-# i want to use from the MainQSO directory (whereever the QSO files are located
+# i want to use from the MainQSO directory (whereever the QSO files are located)
 process_qso_fluxes(fits_directoryA, hdf5_directoryA, output_directoryA, lens_percentage=.1, num_files=None)
 
 # Example usage
-fits_directoryB = os.path.expandvars('$SCRATCH/MainQSO/B')
-hdf5_directoryB = os.path.expandvars('$SCRATCH/augLAE_minsignal1_hdf5')
-output_directoryB = os.path.expandvars('$SCRATCH/modifiedMainQSO_minsignal1/B')
+fits_directoryB = os.path.expandvars('$SCRATCH/DATA/MainQSO/B')
+hdf5_directoryB = os.path.expandvars('$SCRATCH/DATA/LAE/augLAE_minsignal2_hdf5')
+output_directoryB = os.path.expandvars('$SCRATCH/DATA/modifiedMainQSO/modifiedMainQSO_minsignal2_amplified5/B')
 # I directly indicate what percentage of the files I want to be lensed and select the number of files
 # i want to use from the MainQSO directory (whereever the QSO files are located
 process_qso_fluxes(fits_directoryB, hdf5_directoryB, output_directoryB, lens_percentage=.1, num_files=None)

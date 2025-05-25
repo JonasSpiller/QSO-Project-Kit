@@ -27,11 +27,11 @@ def FDRthreshold_js(Y_test, prob, fdr=0.05, iterations=1000):
 def train_CNN_js(CNN_model, bounds_CNN, x_train, y_train, x_valid, y_valid, x_test, y_test, strategy):
     # set up optimizer:
     # define the total iterations
-    n_iter = 5 #10  # 20
+    n_iter = 10  # 20
     # bits per variable
     n_bits = 16
     # define the population size (always even!!)
-    n_pop = 6 #8  # 10 
+    n_pop = 10 
     # crossover rate
     r_cross = 0.9
 
@@ -49,6 +49,7 @@ def train_CNN_js(CNN_model, bounds_CNN, x_train, y_train, x_valid, y_valid, x_te
     end_o_CNN = time.time()
 
     # test model:
+    print("Test model")
     start_m_CNN = time.time()
     res_opt_method = CNN_model(decoded_CNN, x_train, y_train, x_test, y_test, strategy)
     end_m_CNN_js1 = time.time()
