@@ -91,14 +91,6 @@ def nf(nfilters):
     elif nfilters < 150: return 128
     else: return 256
 
-
-
-def extract_center(data, percentage):
-    start = int((0.5-percentage/200) * data.shape[1])
-    end = int((0.5+percentage/200) * data.shape[1])
-    return data[:, start:end, :]
-
-
 def extract_data_from_fits(file_path):
     print(f"Processing file: {file_path}")
     with fitsio.FITS(file_path) as hdul:

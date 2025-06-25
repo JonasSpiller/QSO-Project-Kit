@@ -2,7 +2,7 @@
 """
 Created on Tue Nov 16 00:42:09 2021
 
-@author: emily
+@author: Emily Garvin
 
 Adapted code, from Source:
 # https://machinelearningmastery.com/simple-genetic-algorithm-from-scratch-in-python/
