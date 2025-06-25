@@ -82,13 +82,14 @@ gc.collect()
 # # CNN
 # =============================================================================
 
-model = CNN_model3
+model = CNN_model5
 # batch_size, epochs, learning_rate, momentum, kernelsize, maxpooling, (nfilters)
 # bounds = [[16, 256], [10, 50]] #0
 # bounds = [[16, 64], [100, 200], [0.0001, 0.01], [0.1, 0.9], [2, 8], [2, 3]] #1
 # bounds = [[32, 128], [30, 80], [0.001, 0.01], [0.1, 0.9], [2, 8], [2, 3], [4, 64]] #2
-bounds = [[32, 128], [10, 100], [0.001, 0.01], [0.1, 0.9], [2, 8], [4, 128], [0.1, 0.8]] #3
+# bounds = [[32, 128], [10, 100], [0.001, 0.01], [0.1, 0.9], [2, 8], [4, 128], [0.1, 0.8]] #3
 #bounds = [[32, 128], [30, 80], [0.001, 0.01], [0.1, 0.9], [2, 8], [4, 64], [1e-6, 1e-1]] #4
+bounds = [[32, 128], [10, 100], [0.001, 0.01], [0.1, 0.9], [2, 8], [4, 128], [2, 5]] #5
 
 print("Starting")
 res_opt_method, CM_opt, hyperparam_optim, optim_results = train_CNN_js(model, bounds, x_train, y_train, x_valid, y_valid, x_test, y_test, strategy)
@@ -102,12 +103,12 @@ print("Completed")
 # use a dictionary with keys using the right names.
 results = {'results': res_opt_method, 'confusion matrix': CM_opt, 'hyperparameters': hyperparam_optim,
            'y_test': list(y_test)}
-a_file = open(results_path + "results3.pkl", "wb")
+a_file = open(results_path + "results5.pkl", "wb")
 pickle.dump(results, a_file)
 a_file.close()
 
 # export optimization results
-a_file = open(results_path + "GA_results3.pkl", "wb")
+a_file = open(results_path + "GA_results5.pkl", "wb")
 pickle.dump(optim_results, a_file)
 a_file.close()
 
