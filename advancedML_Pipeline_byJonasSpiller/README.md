@@ -20,3 +20,5 @@ The pipeline is designed to identify quasars (QSOs) acting as strong gravitation
 ├── MLmodels.py             # CNN model architectures
 ├── HPtuning_GA.py          # Genetic algorithm for hyperparameter optimization
 ├── results.ipynb           # Results and model evaluation 
+
+Part of the pipeline was inspired by [Emily Garvin](https://github.com/eogarvin/MLCCS).

@@ -1,16 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 16 00:42:09 2021
-
-@author: Emily Garvin
-
-Adapted code, from Source:
-# https://machinelearningmastery.com/simple-genetic-algorithm-from-scratch-in-python/
-# https://machinelearningmastery.com/faq/single-faq/can-i-use-your-code-in-my-own-project/
-# date accessed : 16.11.21
-#Jason Brownlee, Simple Genetic Algorithm From Scratch in Python, Machine Learning Mastery, Available from https://machinelearningmastery.com/simple-genetic-algorithm-from-scratch-in-python/, accessed 16.11.21.
-"""
-
 # LIBRARIES
 import numpy as np
 import time
