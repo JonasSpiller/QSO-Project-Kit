@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# Create ELG dataset (not important)
+
 # Importing necessary libraries
 import pandas as pd
 import fitsio

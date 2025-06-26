@@ -1,0 +1,10 @@
+output_data_batch_10.h5
+modified_desi_bright_qso_batch3.fits
+**/.ipynb_checkpoints/
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
